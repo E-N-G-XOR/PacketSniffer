@@ -22,6 +22,19 @@ def getMacAddress(bytesAddress):
     macAddress = ':'.join(bytesString).upper()
     return macAddress
 
+#Unpack IP header data
+def ip_packet(data):
+    versionHeaderLength = data[0]
+    version = versionHeaderLength >> 4
+    headerLength = (versionHeaderLength & 15) * 4
+
+    timeToLive, protocol, source, target = struct.unpack('! 8x B B  2x 4s 4s', data[:20])
+    return version, headerLength, timeToLive, protocol, ip(source), ip(target), data[headerLength:]
+
+#Returns properly formatted IP address
+def ip(address):
+    return '.'.join(map(str, address))
+
 main()
 
 
