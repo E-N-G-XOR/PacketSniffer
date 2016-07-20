@@ -20,7 +20,44 @@ def main():
         rawData, address = connection.recvfrom(65535)
         reciever_mac, sender_mac, ethernetProtocol, data = ethernet_frame(rawData)
         print('\nEthernet Frame: ')
-        print('Destination: {}, Source: {}, Protocol: {}'.format(reciever_mac, sender_mac, ethernetProtocol))
+        print(TAB_1 + 'Destination: {}, Source: {}, Protocol: {}'.format(reciever_mac, sender_mac, ethernetProtocol))
+
+        #Make sure you are using Ethernet protocol 8
+        if ethernetProtocol == 8:
+            (version, headerLength, timeToLive, protocol, source, target, data) = ip(data)
+            print(TAB_1 + 'IP Packet:')
+            print(TAB_2 + 'Version: {}, Header Length: {}, TTL: {}'.format(version, headerLength, timeToLive))
+            print(TAB_2 + 'Protocol: {}, Source: {}, Target: {}'.format(protocol, source, target))
+
+            if protocol == 1:
+                icmpType, code, checkSum, data = icmpPackets(data)
+                print(TAB_1 + 'ICMP Packet:')
+                print(TAB_2 + 'Type: {}, Code: {}, Checksum: {},'.format(icmpType, code, checkSum))
+                print(TAB_2 + 'Data:')
+                print(formatMultiLine(DATA_TAB_3, data))
+
+            elif protocol == 6:
+                (sourcePort, destinationPort, sequence, acknowledgement, flagURG, flagACK, flagPSH, flagRST, flagSYN, flagFIN, data) = tcpSegment(data)
+                print(TAB_2 + 'Source Port: {}, Destination Port: {}'.format(sourcePort, destinationPort))
+                print(TAB_2 + 'Sequence: {}, Acknowledgment: {}'.format(sequence, acknowledgement))
+                print(TAB_2 + 'Flags:')
+                print(TAB_3 + 'URG: {}, ACK: {}, PSH: {}'.format(flagURG, flagACK, flagPSH))
+                print(TAB_3 + 'RST: {}, SYN: {}, FIN:{}'.format(flagRST, flagSYN, flagSYN))
+                print(formatMultiLine(DATA_TAB_3, data))
+
+            elif protocol == 17:
+                (sourcePort, destinationPort, length, data) = udpSegment(data)
+                print(TAB_1 + 'UDP Segment:')
+                print(TAB_2 + 'Source Port: {}, Destination Port: {}, Length: {}'.format(sourcePort, destinationPort, length))
+
+            else:
+                print(TAB_1 + 'Other IPv4 Data:')
+                print(formatMultiLine(DATA_TAB_2, data))
+
+        else:
+            print('Ethernet Data:')
+            print(formatMultiLine(DATA_TAB_1, data))
+
 
 # Unpack ethernet frame
 def ethernet_frame(data):
